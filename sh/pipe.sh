@@ -27,6 +27,7 @@ model.model_name=meta-llama/Llama-2-7b-hf \
 dataset.col_to_select=text_0
 
 python3 infer.py ~dataset.splits.train=train \
+dataset.col_to_select=text_0 \
 inference.base_model_name=meta-llama/Llama-2-7b-hf \
 inference.lora_adapter_name=FundSciImpact/llama-2-7b_ft \
 inference.output_dname=llama-2-7b_ft \
