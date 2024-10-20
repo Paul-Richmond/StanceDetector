@@ -1,0 +1,48 @@
+base_model_name: meta-llama/Llama-2-7b-chat-hf
+lora_adapter_name: FundSciImpact/llama-2-7b-chat_ft  # lora_adapter_name is optional
+
+# Control how model is configured (optional)
+# see https://docs.vllm.ai/en/latest/dev/offline_inference/llm.html
+# can also pass any of https://docs.vllm.ai/en/latest/models/engine_args.html#engine-args
+#model_cfg:
+#  dtype: auto # default
+#  max_num_batched_tokens: 1024 # default is 512
+
+# Control how generation is configured (optional)
+# see https://docs.vllm.ai/en/latest/dev/sampling_params.html
+generation_cfg:
+  max_tokens: 16
+  min_tokens: 1
+  temperature: 0.0
+  #  repetition_penalty: 1.0
+  #  top_k: 100
+  #  top_p: 0.5
+
+# Quantities for parsing model predictions
+parse_dict:
+  disagree:
+    indicators:
+      - against
+    label: against
+  agree:
+    indicators:
+      - support
+    label: support
+  neutral:
+    indicators:
+      - none
+    label: none
+  failed:
+    label: none  # could set this to 'no match' to differ from neutral label
+    
+# Quantities for F1 score evaluation
+dataset_labels_column: Stance  # dataset column which contains the ground truths
+f1_support_labels:
+  - 'against'
+  - 'support'
+stance_target_column: Target
+
+# For outputs
+output_dname: llama-2-7b-chat_ft
+output_dir: /data/scratch/${oc.env:USER}/FundSciImpact_vllm/${inference.output_dname}
+output_fname: messages_0

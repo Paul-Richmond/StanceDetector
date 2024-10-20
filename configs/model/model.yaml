@@ -1,0 +1,37 @@
+model_name: 'meta-llama/Llama-2-7b-chat-hf'
+chat_template: 'llama'
+
+model_cfg:
+  max_seq_length: 1024
+  dtype: null  # null equates to None in yaml
+  load_in_4bit: true
+  token: null
+  device_map: sequential
+  rope_scaling: null
+  fix_tokenizer: true
+  trust_remote_code: false
+  use_gradient_checkpointing: "unsloth"
+  resize_model_vocab: null
+  revision: null
+
+lora_cfg:
+  r: 8
+  target_modules:
+    - up_proj
+    - down_proj
+    - gate_proj
+    - k_proj
+    - q_proj
+    - v_proj
+    - o_proj
+  lora_alpha: 16
+  lora_dropout: 0.05
+  bias: none  # this needs to be a string so we keep none
+  layers_to_transform: null
+  use_gradient_checkpointing: true
+  random_state: 3407
+  use_rslora: false
+  modules_to_save: null
+  init_lora_weights: true
+  loftq_config: null
+  temporary_location: _unsloth_temporary_saved_buffers

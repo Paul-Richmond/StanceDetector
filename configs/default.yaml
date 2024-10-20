@@ -1,0 +1,12 @@
+defaults:
+  - optimizer: adamw
+  - dataset: semeval
+  - model: model
+  - training: training_args
+  - _self_
+
+hydra:
+  run:
+    dir: FundSciImpact/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: true

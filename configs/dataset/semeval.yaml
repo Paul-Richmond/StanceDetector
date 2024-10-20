@@ -1,0 +1,5 @@
+name: FundSciImpact/semeval-2016
+splits:
+  train: train
+  test: test
+col_to_select: messages_0  # the column to use as input to finetuning
