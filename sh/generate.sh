@@ -14,13 +14,13 @@ module load anaconda3
 module load gcc
 module load cuda/12.2
 
-mamba activate fsi
+conda activate fsi
 
 # change where the huggingface dataset and model are cached to
 # see https://huggingface.co/docs/huggingface_hub/en/package_reference/environment_variables
 export HF_HOME=/data/scratch/$USER/.cache/huggingface/hub
 
-cd /data/scratch/$USER/DeepImpactLLM/src
+cd /data/scratch/$USER/StanceDetector/src
 
 # Example of generating using a foundational LLM
 python3 infer.py ~dataset.splits.train=train \
