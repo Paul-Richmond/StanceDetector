@@ -6,8 +6,6 @@
 #$ -cwd
 #$ -j y
 
-cd ~
-
 module load anaconda3
 module load gcc
 module load cuda/12.2
