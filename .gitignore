@@ -170,3 +170,4 @@ wandb/
 src/wandb/
 # Shell scripts
 sh/
+*.o
