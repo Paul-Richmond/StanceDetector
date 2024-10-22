@@ -4,7 +4,7 @@
 
 A pipeline for detecting stance in social media comments.
 It uses the 🤗 Hugging Face libraries as well as 🦥 Unsloth,
-vLLM and 🦜️🔗 LangChain.
+vLLM and, hopefully soon, 🦜️🔗 LangChain.
 
 ## 1. Getting started
 
@@ -70,7 +70,22 @@ whose key feature is
 > the ability to dynamically create a hierarchical configuration
 > by composition and override it through config files and the command line.
 
-The hydra configuration files are stored within the `configs` directory.
+The hydra configuration files are stored within the `configs` directory as follows
+```
+├── configs
+│   ├── dataset
+│   │   ├── *.yaml
+│   ├── inference
+│   │   ├── *.yaml
+│   ├── model
+│   │   ├── *.yaml
+│   ├── optimizer
+│   │   ├── *.yaml
+│   ├── training 
+│   │   ├── *.yaml
+│   ├── default.yaml   
+│   ├── default_infer.yaml 
+```
 
 ### 2.1 Training
 
@@ -78,4 +93,48 @@ TBF
 
 ### 2.2 Inference
 
-TBF
+The script `src/infer.py` 
+1. downloads a preformatted dataset from Hugging Face
+2. uses vLLM to generate responses to the prompt/chat inputs contained within the dataset
+3. parses the generated responses and computes the macro average F1 score and classification report
+4. saves a JSON file wit the results
+
+
+The script is controlled through the yaml files contained within the configs directory.
+
+#### 2.2.1 `configs/dataset`
+
+Each yaml file in this directory should contain
+
+`name`: A Hugging Face repository for a preformatted dataset.
+
+`splits`: A dictionary containing the dataset splits to be loaded.
+**NB** Currently `infer.py` only handles a single dataset split.
+
+`col_to_select`: The name of the column within the dataset to use as inputs.
+
+#### 2.2.2 `configs/inference`
+
+Each yaml file in this directory should contain
+
+`base_model_name`: A Hugging Face repository for a foundational LLM.
+
+`lora_adapter_name`: An optional Hugging Face repository containing LoRA adapters. 
+Set the value to `null` if no LoRA adapters are to be used.
+
+`model_cfg`: An optional dictionary containing keyword parameters passed to vLLM's `LLM` class.
+
+For example using 
+```yaml
+model_cfg:
+  quantization: bitsandbytes
+  load_format: bitsandbytes
+```
+would load a quantized model using the `bitsandbytes` package.
+
+`generation_cfg`: An optional dictionary containing keyword parameters passed to vLLM's
+`SamplingParameters` class. It controls how vLLM generates responses.
+
+`parse_dict`: A dictionary of four dictionaries which controls how the parsing of
+the vLLM generated repsonses happens. The inner dictionaries have keys disagree, agree,
+neutral and failed. The first 
