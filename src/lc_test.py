@@ -125,3 +125,7 @@ def main(cfg: DictConfig) -> None:
                           filename=cfg.inference.output_fname)
     except Exception as e:
         logger.error(e)
+
+
+if __name__ == "__main__":
+    main()
