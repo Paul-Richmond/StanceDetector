@@ -17,6 +17,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from langchain_core.chat_history import (BaseChatMessageHistory,
                                          InMemoryChatMessageHistory)
+from langchain.globals import set_verbose
 
 from utils.io import load_dataset_splits
 from utils.io import save_dict_to_json
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig()
 logger.setLevel(logging.INFO)
 
+set_verbose(True)
 store = {}
 
 
@@ -71,6 +73,8 @@ def main(cfg: DictConfig) -> None:
     ds_split_names = list(ds)
     ds = ds[list(ds)[0]]  # extract the single Dataset object from the DatasetDict object
 
+    ds = ds.select(range(4))
+
     sys_msg = SystemMessage("""You are a helpful, respectful, and honest assistant for stance detection for a given target. Stance detection is the process of determining whether the author of a tweet is in support of or against a given target. The target may not always be explicitly mentioned in the text, and the tweet’s stance can be conveyed implicitly through subtext, regional and cultural references, or other implicit meanings. 
     The possible stances are:
       support: The tweet has a positive or supportive attitude towards the target, either explicitly or implicitly.
@@ -105,14 +109,21 @@ def main(cfg: DictConfig) -> None:
                                                             get_session_history,
                                                             input_messages_key="messages")
     history_list = []
-    for init_message, batch_config in zip(init_messages, batch_configs):
-        response = chain_with_message_history.invoke(init_message, batch_config)
+    chain_with_message_history.batch(init_messages, batch_configs)
+    chain_with_message_history.batch(follow_messages, batch_configs)
 
-    for follow_message, batch_config in zip(follow_messages, batch_configs):
-        response = chain_with_message_history.invoke(follow_messages, batch_config)
+    for batch_config in batch_configs:
         session_id = batch_config['configurable']['session_id']
         session_history = chain_with_message_history.get_session_history(session_id)
         history_list.append(messages_to_dict(session_history.messages))
+    # for init_message, batch_config in zip(init_messages, batch_configs):
+    #     response = chain_with_message_history.invoke(init_message, batch_config)
+    #
+    # for follow_message, batch_config in zip(follow_messages, batch_configs):
+    #     response = chain_with_message_history.invoke(follow_messages, batch_config)
+    #     session_id = batch_config['configurable']['session_id']
+    #     session_history = chain_with_message_history.get_session_history(session_id)
+    #     history_list.append(messages_to_dict(session_history.messages))
 
     # Prepare output_dict and save it to disk
     output_dict = {'model': model_name,
