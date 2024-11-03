@@ -46,15 +46,19 @@ Then paste your private Hugging Face and W&B API keys into the renamed file.
 For use on Apocrita I have included a shell script to set up a new conda environment
 called `fsi` and install the packages contained within `fsi.txt`.
 
-To run the script log on to Apocrita and execute
+To run the script log on to Apocrita, change directory to point to this repository e.g.
+`cd /data/scratch/$USER/StanceDetector` and execute
 ```shell
-cd /data/scratch/$USER/StanceDetector
-
 qsub create_fsi_env.sh
 ```
+
 #### 1.4.2 On Sulis
 
 Sulis does not use conda, so we have to create a python virtual environment instead.
+Log on to Sulis, change directory to point to this repository and execute
+```shell
+sbatch create_fsi_env.slurm
+```
 
 
 ## 2. Usage
