@@ -6,17 +6,19 @@
 #SBATCH --gres=gpu:ampere_a100:1
 #SBATCH --partition=gpu
 #SBATCH --time=8:00:00
-#SBATCH --account=su008-apw822
+#SBATCH --account=su008-apw822  #<-- replace with your account name
 
 #set -x  #<-- uncomment for verbose output
 
 module purge
 module load GCC/12.2.0 CUDA/12.2.0 Python/3.10.8
 
+cd ~
+
 python -m venv fsi
 source ~/fsi/bin/activate
 
 pip install --upgrade pip
-pip install -r StanceDetector/fsi.txt
+pip install -r ./fsi.txt
 
 python -m torch.utils.collect_env
