@@ -1,10 +1,12 @@
+# Default configurations which control inference
 defaults:
-  - dataset: semeval
-  - inference: infer
-  - _self_
+  - dataset: semeval   # Specifies the dataset to be used
+  - inference: infer   # Specifies the inference configuration
+  - _self_             # Ensures defaults are resolved in this file context
 
+# Hydra configurations
 hydra:
   run:
-    dir: hydra_output/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: hydra_output/${now:%Y-%m-%d}/${now:%H-%M-%S}  # Output directory with timestamp formatting
   job:
-    chdir: false
+    chdir: false  # Prevent changing the working directory

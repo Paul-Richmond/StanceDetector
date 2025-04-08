@@ -1,12 +1,14 @@
+# Default configurations which control training
 defaults:
-  - optimizer: adamw
-  - dataset: semeval
-  - model: model
-  - training: training_args
-  - _self_
-
+  - optimizer: adamw          # Default optimizer being used
+  - dataset: semeval          # Dataset to use for training and evaluation
+  - model: model              # Base model and Peft configurations
+  - training: training_args   # Training arguments/configuration
+  - _self_                    # Ensures defaults are resolved in this file context
+  -
+# Hydra configurations
 hydra:
   run:
-    dir: hydra_output/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: hydra_output/${now:%Y-%m-%d}/${now:%H-%M-%S}  # Output directory with timestamp formatting
   job:
-    chdir: false
+    chdir: false  # Prevent changing the working directory

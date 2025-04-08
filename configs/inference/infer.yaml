@@ -1,48 +1,54 @@
+# Specify the base model repository to use
 base_model_name: meta-llama/Llama-2-7b-chat-hf
-lora_adapter_name: FundSciImpact/llama-2-7b-chat_ft  # lora_adapter_name is optional
 
-# Control how model is configured (optional)
-# see https://docs.vllm.ai/en/latest/dev/offline_inference/llm.html
-# can also pass any of https://docs.vllm.ai/en/latest/models/engine_args.html#engine-args
-#model_cfg:
-#  dtype: auto # default
-#  max_num_batched_tokens: 1024 # default is 512
+# Optional: Specify the LoRA adapter to use for fine-tuned weights
+lora_adapter_name: FundSciImpact/llama-2-7b-chat_ft
 
-# Control how generation is configured (optional)
-# see https://docs.vllm.ai/en/latest/dev/sampling_params.html
+# Optional: Control model-specific configurations
+# For more details, see:
+# - https://docs.vllm.ai/en/latest/dev/offline_inference/llm.html
+# - https://docs.vllm.ai/en/latest/models/engine_args.html#engine-args
+# model_cfg:
+#   dtype: auto         # Handling precision automatically (default is 'auto')
+#   max_num_batched_tokens: 1024  # Set maximum tokens processed in a batch (default is 512)
+
+# Optional: Configure generation behavior
+# For details, see:
+# - https://docs.vllm.ai/en/latest/dev/sampling_params.html
 generation_cfg:
-  max_tokens: 16
-  min_tokens: 1
-  temperature: 0.0
-  #  repetition_penalty: 1.0
-  #  top_k: 100
-  #  top_p: 0.5
+  max_tokens: 16        # Maximum number of tokens to generate
+  min_tokens: 1         # Minimum number of tokens to generate
+  temperature: 0.0      # Control randomness in generation (0.0 = deterministic)
+  # repetition_penalty: 1.0  # Penalize repetition in generated text
+  # top_k: 100              # Limit sampling to top-k tokens
+  # top_p: 0.5              # Use nucleus sampling with a cumulative probability of top_p
 
-# Quantities for parsing model predictions
+# Definitions used to parse model predictions into specific labels
 parse_dict:
-  disagree:
-    indicators:
-      - against
-    label: against
-  agree:
-    indicators:
+  agree: # Category for "agree" predictions
+    indicators: # Example indicators for this label e.g. 'support', 'for'
       - support
-    label: support
-  neutral:
-    indicators:
+      # - 'for' # add further labels if needed
+    label: support      # Standardized label name
+  disagree: # Category for "disagree" predictions
+    indicators: # Example indicators for this label
+      - against
+    label: against      # Standardized label name
+  neutral: # Category for "neutral" predictions
+    indicators: # Example indicators for this label
       - none
-    label: none
-  failed:
-    label: none  # could set this to 'no match' to differ from neutral label
-    
-# Quantities for F1 score evaluation
-dataset_labels_column: Stance  # dataset column which contains the ground truths
-f1_support_labels:
+    label: none         # Standardized label name
+  failed: # For cases where prediction parsing fails
+    label: none         # Default label for "failed" predictions (can be customized)
+
+# Specify the evaluation configuration for F1 score calculation
+dataset_labels_column: Stance       # Column in the dataset containing ground truth labels
+f1_support_labels: # Labels to use when calculating F1 score
   - 'against'
   - 'support'
-stance_target_column: Target
+stance_target_column: Target        # Column in the dataset for the evaluation target
 
-# For outputs
+# Output configuration
 output_dname: llama-2-7b-chat_ft
-output_dir: /data/scratch/${oc.env:USER}/FundSciImpact_vllm/${inference.output_dname}
-output_fname: messages_0
+output_dir: /data/scratch/${oc.env:USER}/FundSciImpact_vllm/${inference.output_dname} # Directory for saving results
+output_fname: messages_0         # Filename for the saved JSON output
