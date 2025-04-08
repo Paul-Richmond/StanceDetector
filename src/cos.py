@@ -1,13 +1,24 @@
-from datasets import load_dataset, Dataset
-from vllm import LLM, SamplingParams
-from vllm.sampling_params import GuidedDecodingParams
-from sklearn.metrics import classification_report, f1_score
-from timeit import default_timer as timer
+"""
+cos.py - Chain of Stance
+
+This script is an implementation of the paper `Chain of Stance: Stance Detection with Large Language Models`, arXiv:2408.04649.
+It uses the vLLM package to interact with large language models for stance detection tasks.
+The script follows a multi-step process to analyze statements, detect their stances towards specific targets, 
+and evaluate the contextual polarity using guided decoding and sampling parameters.
+The main functionality includes loading a dataset, processing statements through defined steps of analysis 
+with the help of a language model, and calculating evaluation metrics like F1 score and classification report.
+"""
 
 import logging
 import os
-from dotenv import load_dotenv
+from timeit import default_timer as timer
+
 import huggingface_hub
+from datasets import load_dataset
+from dotenv import load_dotenv
+from sklearn.metrics import classification_report, f1_score
+from vllm import LLM, SamplingParams
+from vllm.sampling_params import GuidedDecodingParams
 
 from utils.io import save_dict_to_json
 from utils.processing import post_process_results
@@ -23,24 +34,75 @@ logger.setLevel(logging.INFO)
 
 
 def get_vllm_responses(outputs):
+    """
+    Extracts the text responses from the outputs of the language model.
+
+    Args:
+        outputs (list): A list of model output objects containing text responses.
+
+    Returns:
+        list: A list of strings, where each string is the model's response.
+    """
     return [output.outputs[0].text for output in outputs]
 
 
 def step_one(step_one_template: str, statements: list) -> list:
+    """
+    Constructs the input messages for the first step of stance detection.
+
+    Args:
+        step_one_template (str): A template defining the task for step one.
+        statements (list): A list of textual statements to analyze.
+
+    Returns:
+        list: A nested list of dictionaries, where each dictionary represents
+              a user message with the content formatted by the template.
+    """
     return [[{'role': 'user',
               'content': step_one_template.format(statement=statement)}]
             for statement in statements]
 
 
 def other_steps(step_template: str, length: int) -> list:
+    """
+    Generates a list of repeated templates for subsequent processing steps.
+
+    Args:
+        step_template (str): The template for the current step in processing.
+        length (int): The number of times to repeat the template.
+
+    Returns:
+        list: A list containing the specified template repeated 'length' times.
+    """
     return [step_template for _ in range(length)]
 
 
 def step_six(step_six_template: str, targets: list) -> list:
+    """
+    Constructs the input messages for step six, which determines stance polarity.
+
+    Args:
+        step_six_template (str): A template string for step six.
+        targets (list): A list of targets for stance determination.
+
+    Returns:
+        list: A list of strings, each formatted with the respective target.
+    """
     return [step_six_template.format(target=target) for target in targets]
 
 
 def add_to_messages(messages, inputs, role='user'):
+    """
+    Appends new inputs to the existing message chains.
+
+    Args:
+        messages (list): A list of message chains, where each chain is a list of dictionaries.
+        inputs (list): A list of new messages to be appended as responses.
+        role (str, optional): The role of the message sender (e.g., 'user', 'assistant'). Defaults to 'user'.
+    
+    Returns:
+        list: The updated list of message chains with appended inputs.
+    """
     # Check len(messages) == len(inputs)
     for idx, input in enumerate(inputs):
         # Might need logic to convert response to string
@@ -49,6 +111,14 @@ def add_to_messages(messages, inputs, role='user'):
 
 
 def main():
+    """
+    The main function orchestrates the stance detection process:
+    - Loads the test dataset containing statements, targets, and ground truth stances.
+    - Processes data through multiple steps, interacting with the LLM.
+    - Evaluates the macro F1 score and classification metrics.
+    - Saves the final output, including generated messages and metrics, to a JSON file.
+    """
+    # Load the dataset and extract relevant fields.
     ds = load_dataset('FundSciImpact/semeval-2016', split='test')
     statements = ds['Tweet']
     targets = ds['Target']
@@ -91,7 +161,8 @@ def main():
 
     step_six_template = '''Based on all previous information, determine the stance polarity towards {target}.'''
 
-    step_final_template = '''Summarize the stance polarity.'''
+    # As using guided_decoding_params we shouldn't need to summarize the stance
+    # step_final_template = '''Summarize the stance polarity.'''
 
     start = timer()
     messages = step_one(step_one_template, statements)
@@ -124,6 +195,7 @@ def main():
     responses = get_vllm_responses(outputs)
     messages = add_to_messages(messages, responses, role='assistant')
 
+    # As using guided_decoding_params we shouldn't need to summarize the stance with step_final_template
     # messages = add_to_messages(messages, other_steps(step_final_template, length), role='user')
     # outputs = llm.chat(messages, sampling_params_final)
     # responses = get_vllm_responses(outputs)
@@ -138,7 +210,7 @@ def main():
     logger.info(f"Macro F1_av on labels 'against', 'support': {f_score:.4f}")
     class_report = classification_report(y_true=y_true, y_pred=y_pred, zero_division=0.0)
     logger.info(f'Classification report: \n {class_report}')
-    class_report_dict = classification_report(y_true=y_true, y_pred=y_pred, zero_division=0.0)
+    class_report_dict = classification_report(y_true=y_true, y_pred=y_pred, zero_division=0.0, output_dict=True)
 
     output_dict = {'all_output': messages,
                    'y_pred': y_pred,
