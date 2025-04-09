@@ -341,6 +341,7 @@ The inference script uses vLLM's `LLM` class to load models efficiently:
 llm = LLM(model=cfg.inference.base_model_name, enable_lora=enable_lora)
 ```
 
+
 #### LoRA Adapter Integration
 
 For fine-tuned models, LoRA adapters are loaded and applied:
@@ -476,6 +477,3 @@ This collaborative approach improves stance detection by:
 - Capturing multiple perspectives on the same content
 - Providing explicit reasoning chains for stance judgments
 - Reducing individual agent bias through collaborative evaluation
-
-
-
