@@ -1,12 +1,12 @@
 #!/bin/bash
 #$ -l h_rt=1:0:0
 #$ -l h_vmem=3.0G
-#$ -pe smp 12
+#$ -pe smp 8
 #$ -l gpu=1
 #$ -cwd
 #$ -j y
 
-module load anaconda3
+module load miniforge
 module load gcc
 module load cuda/12.2
 

@@ -1,22 +1,34 @@
+# Repository of the base model being fine-tuned
 model_name: 'meta-llama/Llama-2-7b-chat-hf'
+
+# Chat template identifier for use with tokenizer
+# See https://docs.unsloth.ai/basics/chat-templates
 chat_template: 'llama'
 
+# Model configuration
+# See Unsloth documentation for FastLanguageModel.from_pretrained at
+# https://github.com/unslothai/unsloth/blob/main/unsloth/models/loader.py
+# for detailed information on all available parameters
 model_cfg:
-  max_seq_length: 1024
-  dtype: null  # null equates to None in yaml
-  load_in_4bit: true
-  token: null
-  device_map: sequential
-  rope_scaling: null
-  fix_tokenizer: true
-  trust_remote_code: false
-  use_gradient_checkpointing: "unsloth"
-  resize_model_vocab: null
-  revision: null
+  max_seq_length: 1024  # The maximum number of tokens that can be processed in a single input sequence
+  dtype: null  # Data type for model parameters; null translates to None, meaning default type will be used
+  load_in_4bit: true  # Enables 4-bit quantization to reduce memory usage without significant performance loss
+  token: null  # Authentication token for accessing the model, if required; currently not set
+  device_map: sequential  # Specifies the distribution of model layers across devices for parallel processing
+  rope_scaling: null  # Rotary Position Embedding (RoPE) scaling configuration; null means disabled
+  fix_tokenizer: true  # Ensures the tokenizer is aligned and compatible with the model configuration
+  trust_remote_code: false  # Disables execution of remote code to enhance security when loading models
+  use_gradient_checkpointing: "unsloth"  # Reduces memory overhead by enabling gradient checkpointing during training
+  resize_model_vocab: null  # If specified, adjusts the size of the model’s vocabulary; null means no resizing
+  revision: null  # Specifies a specific model revision or version to be loaded; null means latest
 
+# Peft (Parameter Efficient Fine-Tuning) configuration
+# See Unsloth documentation for FastLLamaModel.get_peft_model at
+# https://github.com/unslothai/unsloth/blob/main/unsloth/models/llama.py
+# for detailed information on all available parameters
 lora_cfg:
-  r: 8
-  target_modules:
+  r: 8  # Rank for Low-Rank Adaptation (LoRA), defines the intermediate dimensionality
+  target_modules: # List of model modules where LoRA should be applied
     - up_proj
     - down_proj
     - gate_proj
@@ -24,14 +36,14 @@ lora_cfg:
     - q_proj
     - v_proj
     - o_proj
-  lora_alpha: 16
-  lora_dropout: 0.05
-  bias: none  # this needs to be a string so we keep none
-  layers_to_transform: null
-  use_gradient_checkpointing: true
-  random_state: 3407
-  use_rslora: false
-  modules_to_save: null
-  init_lora_weights: true
-  loftq_config: null
-  temporary_location: _unsloth_temporary_saved_buffers
+  lora_alpha: 16  # Scale factor for LoRA updates
+  lora_dropout: 0.05  # Dropout rate applied during LoRA training to prevent overfitting
+  bias: none  # Specifies the bias setting; here it's set to 'none' as a string
+  layers_to_transform: null  # Specific layers to apply transformation to; null applies to all layers
+  use_gradient_checkpointing: true  # Enables gradient checkpointing to save memory during backpropagation
+  random_state: 3407  # Seed for random number generation to ensure reproducibility
+  use_rslora: false  # Whether to use RS-LoRA (Rank-Stabilized LoRA) for training
+  modules_to_save: null  # Specific modules to save after applying LoRA; null means save all transformed modules
+  init_lora_weights: true  # Initializes LoRA weights when applying adaptation
+  loftq_config: null  # Configuration for LoFT-Q (quantization with LoRA), if applicable
+  temporary_location: _unsloth_temporary_saved_buffers  # Temporary buffer directory for data during operations

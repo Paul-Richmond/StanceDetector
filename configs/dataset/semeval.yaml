@@ -1,5 +1,10 @@
-name: FundSciImpact/semeval-2016
+# Define the dataset repository to be used
+name: FundSciImpact/semeval-2016  # The repository containing the dataset
+
+# Specify the splits within the dataset
 splits:
-  train: train
-  test: test
-col_to_select: messages_0  # the column to use as input to finetuning
+  train: train  # The part of the dataset to use for training
+  test: test    # The part of the dataset to use for testing
+
+# Column selection for processing
+col_to_select: messages_0  # The specific dataset column to use as input for fine-tuning or inference
