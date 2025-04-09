@@ -1,3 +1,12 @@
+"""
+cola.py - This script implements the methodology described in the paper 
+"Chain of Stance: Stance Detection with Large Language Models" (arXiv:2408.04649)
+and applies it to the SemEval-2016 dataset.
+
+This is an initial working version.
+The `langgraph` code has been refactored and moved to src/methods.py in subsequent iterations.
+"""
+
 import logging
 import os
 import json
@@ -42,7 +51,7 @@ llm = VLLM(model='meta-llama/Llama-3.2-3B-Instruct',
 #                  temperature=0.0,
 #                  )
 
-#assign experts for target
+# assign experts for target
 # taken from https://github.com/tsinghua-fib-lab/COLA
 target_role_map = {
     "Atheism": "theologian",
@@ -214,7 +223,8 @@ def batch_dataset(dataset, batch_size):
     for examples in dataset.iter(batch_size):
         statements = examples['Tweet']
         targets = examples['Target']
-        batch = [{'statement': statement, 'target': target} for statement, target in zip(statements, targets)]
+        batch = [{'statement': statement, 
+                  'target': target} for statement, target in zip(statements, targets)]
         all_data.append(batch)
 
     return all_data

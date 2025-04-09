@@ -1,20 +1,26 @@
-from datasets import load_dataset, Dataset
-from timeit import default_timer as timer
-# from langchain_huggingface import HuggingFacePipeline
-from langchain_community.llms import VLLM
-# from langchain_ollama.chat_models import ChatOllama
-from sklearn.metrics import classification_report, f1_score
-# from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+"""
+cola_v2.py - A script which uses the Cola class from src/methods.py to perform stance detection on the SemEval-2016 dataset.
+
+Doesn't work yet with VLLM as it gives an error about weak binding which I haven't solved.:
+"""
 
 import logging
 import os
-from dotenv import load_dotenv
+from timeit import default_timer as timer
+
 import huggingface_hub
 import torch
+from datasets import load_dataset
+from dotenv import load_dotenv
+from langchain_community.llms import VLLM
+# from langchain_huggingface import HuggingFacePipeline
+# from langchain_ollama.chat_models import ChatOllama
+# from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from sklearn.metrics import classification_report, f1_score
 
 from utils.io import save_dict_to_json
-from utils.processing import post_process_results
 from utils.methods import Cola
+from utils.processing import post_process_results
 
 load_dotenv()
 hf_token = os.getenv("HUGGINGFACE_API_KEY")
@@ -25,6 +31,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig()
 logger.setLevel(logging.INFO)
 
+# Model load configuration, used for Hugging Face pipeline only
 model_cfg = {"attn_implementation": "sdpa",  # "flash_attention_2" doesn't work with torch.compile
              "device_map": "auto",
              "torch_dtype": torch.float16
@@ -65,6 +72,8 @@ C: Neutral
 Constraint: Answer with only the option above that is most accurate and nothing else.
 '''
 
+# assign experts for target
+# taken from https://github.com/tsinghua-fib-lab/COLA
 target_role_map = {
     "Atheism": "theologian",
     "Climate Change is a Real Concern": "environmental scientist",
@@ -98,8 +107,11 @@ def main():
     keep_cols = {'Tweet', 'Target', 'Stance'}
     remove_cols = list(set(ds.column_names) - keep_cols)
     ds = ds.remove_columns(remove_cols)
-    batches = batch_dataset(ds, 100)
+    batches = batch_dataset(ds, 100)  # batch the dataset
 
+    # Set up LLMs for Cola agents to use. LangChain allows for many different setups, some are commented out below.
+    #
+    # When using Hugging Face
     # model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B-Instruct", **model_cfg)
     #
     # tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B-Instruct")
@@ -115,6 +127,8 @@ def main():
     #                 temperature=0.8)
     #
     # agent_llm = analysis_llm = judge_llm = HuggingFacePipeline(pipeline=pipe)
+    #
+    # When using Ollama
     # agent_llm = analysis_llm = ChatOllama(
     #     model="llama3.2",
     #     num_predict=300,
@@ -130,15 +144,15 @@ def main():
     #     top_p=0.8,
     #     temperature=0.1,
     # )
+    # When using VLLM
     agent_llm = analysis_llm = judge_llm = VLLM(model='meta-llama/Llama-3.2-3B-Instruct',
                                                 trust_remote_code=True,  # mandatory for hf models
-
                                                 max_new_tokens=300,
                                                 top_k=50,
                                                 top_p=0.95,
                                                 temperature=0.8,
                                                 dtype='half',
-                                                max_model_len='2048',
+                                                max_model_len=2048,
                                                 )
 
     cola = Cola(
@@ -172,6 +186,7 @@ def main():
                           directory='outputs',
                           filename=f'coda_test')
 
+    # Score the outputs
     judgements = [output['judgement'] for output in all_output]
     y_pred = post_process_results(judgements, parse_dict)
     y_true = ds['Stance']
@@ -181,6 +196,7 @@ def main():
     logger.info(f'Classification report: \n {class_report}')
     class_report_dict = classification_report(y_true=y_true, y_pred=y_pred, zero_division=0.0)
 
+    # Save results to JSON file
     output_dict = {'all_output': all_output,
                    'y_pred': y_pred,
                    'y_true': y_true,
